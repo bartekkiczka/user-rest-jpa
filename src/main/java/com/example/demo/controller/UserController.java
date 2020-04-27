@@ -40,7 +40,6 @@ public class UserController {
         userRoles.add(role);
         user.setRoles(userRoles);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setId(0L);
         userService.save(user);
         userRoles = null;
         return user;
@@ -48,7 +47,6 @@ public class UserController {
 
     @PostMapping("/admin-add-user")
     public User adminAddUser(@RequestBody User user){
-        user.setId(0L);
         userService.save(user);
         return user;
     }
