@@ -2,30 +2,31 @@ package com.example.demo.controller;
 
 import com.example.demo.entity.Role;
 import com.example.demo.entity.User;
-import com.example.demo.exceptions.EntityErrorResponse;
 import com.example.demo.exceptions.RoleNotFoundException;
 import com.example.demo.exceptions.UserNotFoundException;
-import com.example.demo.roleService.RoleService;
+import com.example.demo.role_service.RoleService;
 import com.example.demo.userService.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
 @RestController
+@RequestMapping("/api/")
 public class UserController {
 
     private UserService userService;
     private RoleService roleService;
+    private BCryptPasswordEncoder passwordEncoder;
 
     private Set<Role> userRoles = new HashSet<>();
 
     @Autowired
-    public UserController(UserService userService, RoleService roleService){
+    public UserController(UserService userService, RoleService roleService, BCryptPasswordEncoder passwordEncoder){
         this.userService = userService;
         this.roleService = roleService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @GetMapping("/users")
@@ -38,9 +39,10 @@ public class UserController {
         Role role = roleService.findById(3L);
         userRoles.add(role);
         user.setRoles(userRoles);
-        userRoles = null;
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setId(0L);
         userService.save(user);
+        userRoles = null;
         return user;
     }
 

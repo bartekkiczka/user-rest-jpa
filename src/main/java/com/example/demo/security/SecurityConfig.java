@@ -3,6 +3,7 @@ package com.example.demo.security;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.userService.CustomUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
@@ -12,10 +13,12 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
 
+import javax.annotation.Resource;
 import javax.sql.DataSource;
 
 
@@ -24,25 +27,20 @@ import javax.sql.DataSource;
 @EnableJpaRepositories(basePackageClasses = UserRepository.class)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
-    private CustomUserDetailsService userDetailsService;
+    private UserDetailsService userDetailsService;
     private DataSource dataSource;
 
     @Autowired
-    public SecurityConfig(CustomUserDetailsService userDetailsService, DataSource dataSource) {
+    public SecurityConfig(@Qualifier("userDetailsService")UserDetailsService userDetailsService,
+                          @Qualifier("defaultDataSource")DataSource dataSource) {
         this.userDetailsService = userDetailsService;
         this.dataSource = dataSource;
     }
 
     @Autowired
-    protected void configure(AuthenticationManagerBuilder auth) throws Exception{
+    public void configAuthentication(AuthenticationManagerBuilder auth) throws Exception{
+        auth.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder());
         auth.jdbcAuthentication().dataSource(dataSource).passwordEncoder(passwordEncoder());
-    }
-
-    @Bean
-    public JdbcUserDetailsManager jdbcUserDetailsManager() throws Exception{
-        JdbcUserDetailsManager jdbcUserDetailsManager = new JdbcUserDetailsManager();
-        jdbcUserDetailsManager.setDataSource(dataSource);
-        return jdbcUserDetailsManager;
     }
 
     @Bean
